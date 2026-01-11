@@ -27,9 +27,28 @@
 ```bash
 # Bun 사용 시
 bun install
+```
 
-# 또는 npm 사용 시
-npm install
+### 실행 방법
+
+```bash
+# 개발 모드로 실행
+bun run dev
+
+# 또는 빌드 후 실행
+bun run build && bun start
+```
+
+### 빌드 및 배포
+
+```bash
+# 현재 플랫폼용 빌드
+bun run electron:build
+
+# 특정 플랫폼용 빌드
+bun run electron:build -- mac   # macOS (DMG)
+bun run electron:build -- win   # Windows (NSIS)
+bun run electron:build -- linux # Linux (AppImage)
 ```
 
 ### 실행 방법
@@ -159,9 +178,28 @@ npm run electron:build -- --linux # Linux (AppImage)
 ```bash
 # Using Bun
 bun install
+```
 
-# Using npm
-npm install
+### Running the Application
+
+```bash
+# Run in development mode
+bun run dev
+
+# Or build and run
+bun run build && bun start
+```
+
+### Build and Distribution
+
+```bash
+# Build for current platform
+bun run electron:build
+
+# Build for specific platform
+bun run electron:build -- mac   # macOS (DMG)
+bun run electron:build -- win   # Windows (NSIS)
+bun run electron:build -- linux # Linux (AppImage)
 ```
 
 ### Running the Application
