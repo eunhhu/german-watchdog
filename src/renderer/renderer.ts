@@ -2,18 +2,22 @@ import {
   DetectionResult,
   DetectionSettings,
   DetectionState,
-  AlertDetails,
-  CardStatus,
-  RecordingState
+  CardStatus
 } from '../shared/types';
 import {
   PhoneDetectionService,
   SleepDetectionService,
   ActivityMonitoringService,
   ProcessMonitoringService,
-  ScreenMonitoringService,
-  DiscordNotificationService
+  ScreenMonitoringService
 } from './services';
+
+interface RecordingState {
+  isRecording: boolean;
+  duration: number;
+  mediaRecorder: MediaRecorder | null;
+  chunks: Blob[];
+}
 
 export class GermanWatchdog {
   private isRunning: boolean = false;
@@ -33,7 +37,6 @@ export class GermanWatchdog {
   private activityService: ActivityMonitoringService;
   private processService: ProcessMonitoringService;
   private screenService: ScreenMonitoringService;
-  private discordService: DiscordNotificationService;
 
   constructor() {
     this.settings = {
@@ -66,15 +69,18 @@ export class GermanWatchdog {
     this.activityService = new ActivityMonitoringService(this.settings);
     this.processService = new ProcessMonitoringService(this.settings);
     this.screenService = new ScreenMonitoringService(this.settings);
-    this.discordService = new DiscordNotificationService();
   }
 
   async init(): Promise<void> {
     this.bindEvents();
-    await this.loadWebhookUrl();
+    this.loadWebhookUrl();
     this.updateWebhookStatus();
     this.setupExitHandler();
     this.log('German Watchdog initialized', 'info');
+  }
+
+  private loadWebhookUrl(): void {
+    console.log('loadWebhookUrl called');
   }
 
   private bindEvents(): void {
@@ -171,85 +177,136 @@ export class GermanWatchdog {
   private async runSurveillanceCycle(): Promise<void> {
     if (!this.isRunning) return;
 
-    console.log('Starting video surveillance immediately');
     const video = document.getElementById('surveillanceVideo') as HTMLVideoElement | null;
     const overlay = document.getElementById('videoOverlay');
-    const status = document.getElementById('videoStatus');
 
-    if (overlay) overlay.classList.add('hidden');
-    if (status) status.textContent = 'Surveillance Active';
+    console.log('[Surveillance] video element:', !!video);
+    console.log('[Surveillance] overlay element:', !!overlay);
+    console.log('[Surveillance] video readyState:', video?.readyState);
+    console.log('[Surveillance] video networkState:', video?.networkState);
+
+    if (overlay) {
+      overlay.classList.add('hidden');
+      console.log('[Surveillance] overlay hidden class added');
+    }
 
     if (video) {
       video.currentTime = 0;
-      try {
-        await video.play().catch((e: Error) => {
-          console.log('Video play failed:', e.message);
-        });
-      } catch (e) {
-        console.error('Video play error:', e);
+      console.log('[Surveillance] video currentTime set to 0');
+
+      // Add error event listener
+      video.onerror = (e) => {
+        console.error('[Surveillance] Video error event:', e);
+        console.error('[Surveillance] Video error code:', video.error?.code);
+        console.error('[Surveillance] Video error message:', video.error?.message);
+      };
+
+      // Add canplay event listener for debugging
+      video.oncanplay = () => {
+        console.log('[Surveillance] Video canplay event fired');
+      };
+
+      video.onplaying = () => {
+        console.log('[Surveillance] Video playing event fired');
+      };
+
+      video.onended = () => {
+        console.log('[Surveillance] Video ended event fired');
+      };
+
+      // Ensure video is loaded before playing
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        console.log('[Surveillance] Video already has data, attempting play');
+        this.attemptVideoPlay(video);
+      } else {
+        console.log('[Surveillance] Waiting for video to load...');
+        video.oncanplaythrough = () => {
+          console.log('[Surveillance] Video canplaythrough, attempting play');
+          this.attemptVideoPlay(video);
+        };
+        video.load(); // Force reload
       }
     }
 
     this.updateCardStatus('cameraCard', 'Recording', 'active');
-    this.updateCardStatus('screenCard', 'Recording', 'active');
 
-    console.log('Running detection checks during video');
+    if (!this.screenService.isUsingFallback()) {
+      this.updateCardStatus('screenCard', 'Recording', 'active');
+    }
+
     await this.runDetectionChecks();
   }
 
+  private attemptVideoPlay(video: HTMLVideoElement): void {
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise.then(() => {
+        console.log('[Surveillance] video playing successfully');
+      }).catch((e: Error) => {
+        console.error('[Surveillance] video play rejected:', e.name, e.message);
+        // Try again with muted if autoplay policy blocks it
+        if (e.name === 'NotAllowedError') {
+          console.log('[Surveillance] Trying with muted=true');
+          video.muted = true;
+          video.play().catch((e2) => {
+            console.error('[Surveillance] video play with muted also failed:', e2);
+          });
+        }
+      });
+    }
+  }
+
   private onVideoEnded(): void {
-    console.log('Video ended, starting cooldown');
-    
     if (!this.isRunning) return;
 
     const waitTime = this.getRandomInterval();
-    console.log(`Cooldown: waiting ${waitTime}ms`);
-    this.updateCardStatus('cameraCard', `Cooldown (${Math.round(waitTime/1000)}s)`, 'warning');
-    this.updateCardStatus('screenCard', 'Idle', 'inactive');
+
+    this.updateCardStatus('cameraCard', 'Monitoring', 'inactive');
+    if (!this.screenService.isUsingFallback()) {
+      this.updateCardStatus('screenCard', 'Idle', 'inactive');
+    }
 
     setTimeout(() => {
       if (this.isRunning) {
-        console.log('Cooldown finished, starting next cycle');
         this.runSurveillanceCycle();
       }
     }, waitTime);
   }
 
   private async sendStartNotification(): Promise<void> {
-    if (this.discordService.isReady()) {
-      const alert: AlertDetails = {
-        type: 'start',
-        message: 'Surveillance monitoring has started',
-        timestamp: new Date()
-      };
-      await this.discordService.sendAlert(alert);
+    try {
+      await (window as unknown as { electronAPI?: { sendStartNotification: () => Promise<boolean> } })
+        .electronAPI?.sendStartNotification();
+    } catch (e) {
+      console.error('Failed to send start notification:', e);
     }
   }
 
   private async sendStopNotification(): Promise<void> {
-    if (this.discordService.isReady() && this.surveillanceStartTime) {
+    if (this.surveillanceStartTime) {
       const duration = Math.floor((Date.now() - this.surveillanceStartTime) / 1000);
-      const alert: AlertDetails = {
-        type: 'stop',
-        message: `Surveillance stopped after ${duration} seconds`,
-        timestamp: new Date()
-      };
-      await this.discordService.sendAlert(alert);
+      try {
+        await (window as unknown as { electronAPI?: { sendStopNotification: (duration: number) => Promise<boolean> } })
+          .electronAPI?.sendStopNotification(duration);
+      } catch (e) {
+        console.error('Failed to send stop notification:', e);
+      }
     }
   }
 
   private async startMonitoring(): Promise<void> {
     try {
       await this.phoneService.startCamera();
-      this.updateCardStatus('cameraCard', 'Recording', 'active');
     } catch (e) {
-      this.updateCardStatus('cameraCard', 'Error', 'warning');
+      console.warn('Camera start failed:', e);
     }
 
     const screenStarted = await this.screenService.startMonitoring();
     if (screenStarted) {
-      this.updateCardStatus('screenCard', 'Recording', 'active');
-      await this.startScreenRecording();
+      if (!this.screenService.isUsingFallback()) {
+        this.updateCardStatus('screenCard', 'Recording', 'active');
+        await this.startScreenRecording();
+      }
     }
 
     this.activityService.startMonitoring();
@@ -326,7 +383,7 @@ export class GermanWatchdog {
     const overlay = document.getElementById('videoOverlay');
     const status = document.getElementById('videoStatus');
     if (overlay) overlay.classList.remove('hidden');
-    if (status) status.textContent = forced ? 'Surveillance terminated' : 'Surveillance ended';
+    if (status) status.textContent = forced ? '시스템 종료됨' : '시스템 유휴';
 
     this.stopTimer();
     this.stopDetectionLoop();
@@ -450,7 +507,7 @@ export class GermanWatchdog {
     const alertDetails = document.getElementById('alertDetails');
 
     if (alertMessage) alertMessage.textContent = message;
-    if (alertDetails) alertDetails.textContent = `Time: ${new Date().toLocaleTimeString()}`;
+    if (alertDetails) alertDetails.textContent = `시각: ${new Date().toLocaleTimeString()}`;
     if (modal) modal.classList.remove('hidden');
   }
 
@@ -466,36 +523,25 @@ export class GermanWatchdog {
   }
 
   private async sendDiscordAlert(message: string): Promise<void> {
-    if (!this.discordService.isReady()) {
-      this.log('Discord webhook not configured', 'warning');
-      return;
-    }
-
-    const alert: AlertDetails = {
-      type: 'general',
-      message,
-      timestamp: new Date()
-    };
-
-    await this.discordService.sendAlert(alert);
-  }
-
-  private async loadWebhookUrl(): Promise<void> {
-    const saved = await (window as unknown as { electronAPI?: { getWebhookUrl: () => Promise<string> } })
-      .electronAPI?.getWebhookUrl();
-    if (saved) {
-      this.discordService.setWebhookUrl(saved);
+    try {
+      await (window as unknown as { electronAPI?: { sendDiscordAlert: (message: string) => Promise<boolean> } })
+        .electronAPI?.sendDiscordAlert(message);
+    } catch (e) {
+      console.error('Failed to send Discord alert:', e);
     }
   }
 
   private updateWebhookStatus(): void {
     const statusElement = document.getElementById('webhookStatus');
     if (statusElement) {
-      if (this.discordService.isReady()) {
-        statusElement.textContent = '✅ Connected';
+      const webhookUrl = (window as unknown as { electronAPI?: { getWebhookUrl: () => Promise<string> } })
+        .electronAPI?.getWebhookUrl();
+      
+      if (webhookUrl) {
+        statusElement.textContent = '✅ 연결됨';
         statusElement.style.color = '#4CAF50';
       } else {
-        statusElement.textContent = '❌ Not configured';
+        statusElement.textContent = '❌ 미설정';
         statusElement.style.color = '#F44336';
       }
     }
@@ -547,7 +593,6 @@ export class GermanWatchdog {
 
   dispose(): void {
     this.stopSurveillance(true);
-    this.discordService.dispose();
   }
 }
 
