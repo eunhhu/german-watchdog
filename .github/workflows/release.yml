@@ -47,7 +47,12 @@ jobs:
         run: bun run build
 
       - name: Build for ${{ matrix.os }}
-        run: bun run electron:build -${{ matrix.artifact-suffix }}
+        run: |
+          case "${{ matrix.artifact-suffix }}" in
+            linux) bun run electron-builder --linux ;;
+            mac) bun run electron-builder --mac ;;
+            win) bun run electron-builder --win ;;
+          esac
         env:
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
