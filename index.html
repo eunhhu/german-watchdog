@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src 'self' blob:; img-src 'self' blob: data:;">
+  <title>German Watchdog - Surveillance System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <h1>🛡️ German Watchdog</h1>
+      <div class="status-indicator" id="statusIndicator">
+        <span class="status-dot"></span>
+        <span class="status-text">Ready</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Left Panel: Video Feed -->
+      <section class="video-panel">
+        <h2>📹 Surveillance Feed</h2>
+        <div class="video-container">
+          <video id="surveillanceVideo" playsinline>
+            <source src="assets/source.mp4" type="video/mp4">
+          </video>
+          <div id="videoOverlay" class="video-overlay">
+            <span id="videoStatus">Waiting for surveillance...</span>
+          </div>
+          <canvas id="detectionCanvas" class="detection-canvas"></canvas>
+        </div>
+        
+        <div class="video-controls">
+          <button id="startBtn" class="btn btn-primary">🎬 Start Surveillance</button>
+          <button id="stopBtn" class="btn btn-danger" disabled>⏹️ Stop</button>
+          <button id="requestPermissionsBtn" class="btn btn-secondary">🔒 Request Permissions</button>
+        </div>
+
+        <div class="surveillance-timer">
+          <span>Surveillance Time: </span>
+          <span id="timerDisplay">00:00:00</span>
+        </div>
+      </section>
+
+      <!-- Right Panel: Monitoring Status -->
+      <section class="monitor-panel">
+        <h2>👁️ Detection Status</h2>
+        
+        <div class="detection-cards">
+          <!-- Camera Status -->
+          <div class="detection-card" id="cameraCard">
+            <div class="card-icon">📷</div>
+            <div class="card-content">
+              <h3>Camera</h3>
+              <p id="cameraStatus">Inactive</p>
+            </div>
+            <div class="card-indicator inactive"></div>
+          </div>
+
+          <!-- Screen Recording Status -->
+          <div class="detection-card" id="screenCard">
+            <div class="card-icon">🖥️</div>
+            <div class="card-content">
+              <h3>Screen Recording</h3>
+              <p id="screenStatus">Inactive</p>
+            </div>
+            <div class="card-indicator inactive"></div>
+          </div>
+
+          <!-- Phone Detection -->
+          <div class="detection-card" id="phoneCard">
+            <div class="card-icon">📱</div>
+            <div class="card-content">
+              <h3>Phone Detection</h3>
+              <p id="phoneStatus">Not Detected</p>
+            </div>
+            <div class="card-indicator safe"></div>
+          </div>
+
+          <!-- Sleep Detection -->
+          <div class="detection-card" id="sleepCard">
+            <div class="card-icon">😴</div>
+            <div class="card-content">
+              <h3>Sleep Detection</h3>
+              <p id="sleepStatus">Awake</p>
+            </div>
+            <div class="card-indicator safe"></div>
+          </div>
+
+          <!-- Activity Detection -->
+          <div class="detection-card" id="activityCard">
+            <div class="card-icon">🏃</div>
+            <div class="card-content">
+              <h3>Activity Status</h3>
+              <p id="activityStatus">Normal</p>
+            </div>
+            <div class="card-indicator safe"></div>
+          </div>
+
+          <!-- Process Monitoring -->
+          <div class="detection-card" id="processCard">
+            <div class="card-icon">⚙️</div>
+            <div class="card-content">
+              <h3>Process Monitor</h3>
+              <p id="processStatus">Monitoring</p>
+            </div>
+            <div class="card-indicator safe"></div>
+          </div>
+        </div>
+
+        <!-- Discord Webhook Status -->
+        <div class="webhook-config">
+          <h3>🔔 Discord Notifications</h3>
+          <p id="webhookStatus">Loading...</p>
+        </div>
+
+        <!-- Notification Log -->
+        <div class="notification-log">
+          <h3>📋 Activity Log</h3>
+          <div id="logContainer"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Distraction Alert Modal -->
+    <div id="alertModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="alert-header">
+          <span class="alert-icon">⚠️</span>
+          <h2>Distraction Detected!</h2>
+        </div>
+        <div class="alert-body">
+          <p id="alertMessage">User appears to be distracted!</p>
+          <div id="alertDetails"></div>
+        </div>
+        <div class="alert-actions">
+          <button id="dismissAlertBtn" class="btn btn-secondary">Dismiss</button>
+          <button id="snoozeBtn" class="btn btn-primary">Snooze 5min</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/renderer/renderer.js"></script>
+</body>
+</html>
