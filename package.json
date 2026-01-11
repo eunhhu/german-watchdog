@@ -19,7 +19,9 @@
     "@types/bun": "latest",
     "@types/node": "^20.0.0",
     "esbuild": "^0.27.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0"
   },
   "build": {
     "appId": "com.german.watchdog",
@@ -56,8 +58,6 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
-    "electron": "^39.2.7",
-    "electron-builder": "^26.4.0",
     "node-webcam": "^0.8.2",
     "wait-on": "^9.0.3"
   }
