@@ -18,19 +18,28 @@
   "build": {
     "appId": "com.german.watchdog",
     "productName": "German Watchdog",
+    "copyright": "Copyright © 2024 German Watchdog",
     "directories": {
       "output": "release"
     },
     "files": [
       "dist/**/*",
       "index.html",
-      "styles.css"
+      "styles.css",
+      "!dist/**/*.map"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "artifactName": "German Watchdog Setup ${version}.exe"
     },
     "mac": {
-      "target": "dmg"
+      "target": "dmg",
+      "artifactName": "German Watchdog-${version}.dmg"
+    },
+    "linux": {
+      "target": "AppImage",
+      "artifactName": "german-watchdog_${version}_amd64.AppImage",
+      "category": "Utility"
     }
   },
   "keywords": [],
