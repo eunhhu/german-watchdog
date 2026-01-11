@@ -30,6 +30,7 @@
     "directories": {
       "output": "release"
     },
+    "publish": "never",
     "files": [
       "dist/**/*",
       "index.html",
