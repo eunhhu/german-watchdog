@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src 'self' blob:; img-src 'self' blob: data:;">
-  <title>German Watchdog - Surveillance System</title>
+  <title>German Watchdog - 감시 시스템</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,130 +13,119 @@
       <h1>🛡️ German Watchdog</h1>
       <div class="status-indicator" id="statusIndicator">
         <span class="status-dot"></span>
-        <span class="status-text">Ready</span>
+        <span class="status-text">준비됨</span>
       </div>
     </header>
 
     <main class="main-content">
-      <!-- Left Panel: Video Feed -->
       <section class="video-panel">
-        <h2>📹 Surveillance Feed</h2>
+        <h2>📹 감시 화면</h2>
         <div class="video-container">
           <video id="surveillanceVideo" playsinline>
             <source src="assets/source.mp4" type="video/mp4">
           </video>
           <div id="videoOverlay" class="video-overlay">
-            <span id="videoStatus">Waiting for surveillance...</span>
+            <span id="videoStatus">시스템 유휴</span>
           </div>
           <canvas id="detectionCanvas" class="detection-canvas"></canvas>
         </div>
         
         <div class="video-controls">
-          <button id="startBtn" class="btn btn-primary">🎬 Start Surveillance</button>
-          <button id="stopBtn" class="btn btn-danger" disabled>⏹️ Stop</button>
-          <button id="requestPermissionsBtn" class="btn btn-secondary">🔒 Request Permissions</button>
+          <button id="startBtn" class="btn btn-primary">🎬 감시 시작</button>
+          <button id="stopBtn" class="btn btn-danger" disabled>⏹️ 중지</button>
+          <button id="requestPermissionsBtn" class="btn btn-secondary">🔒 권한 요청</button>
         </div>
 
         <div class="surveillance-timer">
-          <span>Surveillance Time: </span>
+          <span>감시 시간: </span>
           <span id="timerDisplay">00:00:00</span>
         </div>
       </section>
 
-      <!-- Right Panel: Monitoring Status -->
       <section class="monitor-panel">
-        <h2>👁️ Detection Status</h2>
+        <h2>👁️ 감지 상태</h2>
         
         <div class="detection-cards">
-          <!-- Camera Status -->
           <div class="detection-card" id="cameraCard">
             <div class="card-icon">📷</div>
             <div class="card-content">
-              <h3>Camera</h3>
-              <p id="cameraStatus">Inactive</p>
+              <h3>카메라</h3>
+              <p id="cameraStatus">비활성</p>
             </div>
             <div class="card-indicator inactive"></div>
           </div>
 
-          <!-- Screen Recording Status -->
           <div class="detection-card" id="screenCard">
             <div class="card-icon">🖥️</div>
             <div class="card-content">
-              <h3>Screen Recording</h3>
-              <p id="screenStatus">Inactive</p>
+              <h3>화면 녹화</h3>
+              <p id="screenStatus">비활성</p>
             </div>
             <div class="card-indicator inactive"></div>
           </div>
 
-          <!-- Phone Detection -->
           <div class="detection-card" id="phoneCard">
             <div class="card-icon">📱</div>
             <div class="card-content">
-              <h3>Phone Detection</h3>
-              <p id="phoneStatus">Not Detected</p>
+              <h3>핸드폰 감지</h3>
+              <p id="phoneStatus">미감지</p>
             </div>
             <div class="card-indicator safe"></div>
           </div>
 
-          <!-- Sleep Detection -->
           <div class="detection-card" id="sleepCard">
             <div class="card-icon">😴</div>
             <div class="card-content">
-              <h3>Sleep Detection</h3>
-              <p id="sleepStatus">Awake</p>
+              <h3>수면 감지</h3>
+              <p id="sleepStatus">깨어 있음</p>
             </div>
             <div class="card-indicator safe"></div>
           </div>
 
-          <!-- Activity Detection -->
           <div class="detection-card" id="activityCard">
             <div class="card-icon">🏃</div>
             <div class="card-content">
-              <h3>Activity Status</h3>
-              <p id="activityStatus">Normal</p>
+              <h3>활동 상태</h3>
+              <p id="activityStatus">정상</p>
             </div>
             <div class="card-indicator safe"></div>
           </div>
 
-          <!-- Process Monitoring -->
           <div class="detection-card" id="processCard">
             <div class="card-icon">⚙️</div>
             <div class="card-content">
-              <h3>Process Monitor</h3>
-              <p id="processStatus">Monitoring</p>
+              <h3>프로세스 모니터</h3>
+              <p id="processStatus">모니터링 중</p>
             </div>
             <div class="card-indicator safe"></div>
           </div>
         </div>
 
-        <!-- Discord Webhook Status -->
         <div class="webhook-config">
-          <h3>🔔 Discord Notifications</h3>
-          <p id="webhookStatus">Loading...</p>
+          <h3>🔔 디스코드 알림</h3>
+          <p id="webhookStatus">로딩 중...</p>
         </div>
 
-        <!-- Notification Log -->
         <div class="notification-log">
-          <h3>📋 Activity Log</h3>
+          <h3>📋 활동 로그</h3>
           <div id="logContainer"></div>
         </div>
       </section>
     </main>
 
-    <!-- Distraction Alert Modal -->
     <div id="alertModal" class="modal hidden">
       <div class="modal-content">
         <div class="alert-header">
           <span class="alert-icon">⚠️</span>
-          <h2>Distraction Detected!</h2>
+          <h2>주의 산만함 감지!</h2>
         </div>
         <div class="alert-body">
-          <p id="alertMessage">User appears to be distracted!</p>
+          <p id="alertMessage">사용자가 산만해 보입니다!</p>
           <div id="alertDetails"></div>
         </div>
         <div class="alert-actions">
-          <button id="dismissAlertBtn" class="btn btn-secondary">Dismiss</button>
-          <button id="snoozeBtn" class="btn btn-primary">Snooze 5min</button>
+          <button id="dismissAlertBtn" class="btn btn-secondary">무시</button>
+          <button id="snoozeBtn" class="btn btn-primary">5분 중단</button>
         </div>
       </div>
     </div>

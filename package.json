@@ -5,8 +5,10 @@
   "type": "module",
   "main": "dist/main/main.js",
   "scripts": {
-    "build": "tsc && npm run build:renderer",
+    "build": "tsc && npm run build:renderer && npm run copy:assets && npm run copy:preload",
     "build:renderer": "esbuild src/renderer/renderer.ts --bundle --outfile=dist/renderer/renderer.js --format=iife --platform=browser --target=ES2020",
+    "copy:assets": "cp .env dist/ && cp index.html dist/ && cp styles.css dist/ && cp source.mp4 dist/",
+    "copy:preload": "cp src/preload/preload.js dist/preload/preload.js",
     "build:watch": "tsc --watch",
     "start": "electron .",
     "dev": "npm run build && npm run start",
@@ -22,7 +24,6 @@
     "files": [
       "dist/**/*",
       "index.html",
-      "source.mp4",
       "styles.css"
     ],
     "win": {
@@ -45,6 +46,7 @@
     "@tensorflow/tfjs-node": "^4.22.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
+    "dotenv": "^17.2.3",
     "electron": "^39.2.7",
     "electron-builder": "^26.4.0",
     "node-webcam": "^0.8.2",
