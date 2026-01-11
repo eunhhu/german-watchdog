@@ -8,7 +8,7 @@
     "build": "bun run tsc && bun run build:renderer && bun run copy:assets && bun run copy:preload",
     "build:renderer": "esbuild src/renderer/renderer.ts --bundle --outfile=dist/renderer/renderer.js --format=iife --platform=browser --target=ES2020",
     "copy:assets": "cp .env dist/ 2>/dev/null || true && cp index.html dist/ && cp styles.css dist/ && cp source.mp4 dist/",
-    "copy:preload": "cp src/preload/preload.js dist/preload/preload.js",
+    "copy:preload": "mkdir -p dist/preload && cp src/preload/preload.js dist/preload/preload.js",
     "build:watch": "bun run tsc --watch",
     "start": "bun run electron .",
     "dev": "bun run build && bun run start",
