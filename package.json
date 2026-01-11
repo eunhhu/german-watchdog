@@ -7,7 +7,7 @@
   "scripts": {
     "build": "bun run tsc && bun run build:renderer && bun run copy:assets && bun run copy:preload",
     "build:renderer": "esbuild src/renderer/renderer.ts --bundle --outfile=dist/renderer/renderer.js --format=iife --platform=browser --target=ES2020",
-    "copy:assets": "cp .env dist/ && cp index.html dist/ && cp styles.css dist/ && cp source.mp4 dist/",
+    "copy:assets": "cp .env dist/ 2>/dev/null || true && cp index.html dist/ && cp styles.css dist/ && cp source.mp4 dist/",
     "copy:preload": "cp src/preload/preload.js dist/preload/preload.js",
     "build:watch": "bun run tsc --watch",
     "start": "bun run electron .",
@@ -51,12 +51,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^20.0.0",
-    "esbuild": "^0.27.2",
-    "typescript": "^5"
-  },
   "dependencies": {
     "@tensorflow/tfjs-node": "^4.22.0",
     "concurrently": "^9.2.1",
