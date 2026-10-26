@@ -84,7 +84,7 @@ grass-*.md, maintenance.log       activity-log files, not part of the app
 
 ## Releases
 
-Pre-built installers are published on the [Releases page](https://github.com/eunhhu/german-watchdog/releases) when a `v*.*.*` tag is pushed.
+The release workflow builds installers for Windows, macOS, and Linux when a `v*.*.*` tag is pushed and uploads them to the [Releases page](https://github.com/eunhhu/german-watchdog/releases). At the time of writing only the `v1.0.16` pre-release carries an asset (a Windows NSIS installer).
 
 ## Privacy
 
